@@ -1,0 +1,53 @@
+services:
+
+  # MariaDB
+  mariadb:
+    image: mariadb:latest
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=wordpress
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=wordpress
+    volumes:
+      - ./.docker/mariadb:/var/lib/mysql
+    networks:
+      - default
+
+  # WordPress
+  wordpress:
+    image: wordpress:latest
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    ports:
+      - 8000:80
+    environment:
+      - WORDPRESS_DB_NAME=wordpress
+      - WORDPRESS_TABLE_PREFIX=wp_
+      - WORDPRESS_DB_HOST=mariadb
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress
+      - WORDPRESS_DEBUG=true
+    volumes:
+      - ./.docker/wordpress:/var/www/html
+      - ./plugins:/var/www/html/wp-content/plugins
+    networks:
+      - default
+
+  # PHP MyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: wordpress
+    ports:
+      - 9001:80
+    networks:
+      - default
+
+networks:
+  default:
